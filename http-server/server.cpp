@@ -12,14 +12,20 @@
 
 #include "inc/server.h"
 
+#define eprintf(format, ...) \
+   fprintf(stderr, format ": %s\n" __VA_OPT__(,) __VA_ARGS__, strerror(errno))
+
+// The port the server will listen on
 const char *TARGET_PORT = "8080";
+// How many pending connections can be in a queue
+const int  BACKLOG = 10;
 
 int main (int argc, char *argv[]) {
    printf("Starting server....\n");
    struct addrinfo hints, *res ;
    int rc = 0; // Return code
-   int fd = 0; // Socket file descriptor
-
+   int socketFd = 0; // Socket file descriptor
+   
    // Initialize the hints
    memset(&hints, 0, sizeof(hints));
    hints.ai_family   = AF_UNSPEC;
@@ -28,7 +34,7 @@ int main (int argc, char *argv[]) {
 
    rc = getaddrinfo(nullptr, TARGET_PORT, &hints, &res);
    if (rc) {
-      printf("Failed to start the server with %d\n", rc);
+      eprintf("Failed to obtain the server's address info");
       goto EXIT;
    }
 
@@ -38,26 +44,32 @@ int main (int argc, char *argv[]) {
       const char *ipCStr = ipStr.c_str();
       printf("Found %s\n", ipCStr);
 
-      fd = socket(traveler->ai_family, traveler->ai_socktype, traveler->ai_protocol);
-      if (-1 == fd) {
-         printf("Failed to create a socket with %s\n", ipCStr);
+      socketFd = socket(traveler->ai_family, traveler->ai_socktype, traveler->ai_protocol);
+      if (-1 == socketFd) {
+         eprintf("Failed to create a socket with %s", ipCStr);
          continue;
       }
 
-      rc = bind(fd, traveler->ai_addr, traveler->ai_addrlen);
+      rc = bind(socketFd, traveler->ai_addr, traveler->ai_addrlen);
       if (rc) {
-         printf("Failed to bind address %s to port %s", ipCStr, TARGET_PORT);
+         eprintf("Failed to bind address %s to port %s", ipCStr, TARGET_PORT);
          continue;
       }
 
       break;
    }
-
-   if (-1 == fd) {
+   if (-1 == socketFd) {
       rc = -1;
-      printf("Failed to find a good address to bind to\n");
+      eprintf("Failed to find a good address to bind to");
       goto EXIT;
    }
+
+   // Start listening
+   rc = listen(socketFd, BACKLOG);
+   if (-1 == socketFd) {
+      eprintf("Failed to start listening on port %s", TARGET_PORT);
+      goto EXIT;
+   } 
 
 EXIT:
    if (nullptr != res) {
