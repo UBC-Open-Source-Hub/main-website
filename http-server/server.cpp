@@ -10,11 +10,9 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 
+#include "inc/log.h"
 #include "inc/server.h"
 #include "inc/securityModelSimple.h"
-
-#define eprintf(format, ...) \
-   fprintf(stderr, format ": %s\n" __VA_OPT__(,) __VA_ARGS__, strerror(errno))
 
 // The port the server will listen on
 const char *TARGET_PORT = "8080";
@@ -26,8 +24,6 @@ int main (int argc, char *argv[]) {
    struct addrinfo hints, *res ;
    int rc = 0; // Return code
    int socketFd = 0; // Socket file descriptor
-
-   SecurityModelSimple simpleModel;
    
    // Initialize the hints
    memset(&hints, 0, sizeof(hints));
@@ -74,7 +70,10 @@ int main (int argc, char *argv[]) {
       goto EXIT;
    } 
 
-   simpleModel.accept();
+   {
+      SecurityModelSimple simpleModel(socketFd);
+      simpleModel.acceptConnections();
+   }
 
 EXIT:
    if (nullptr != res) {
