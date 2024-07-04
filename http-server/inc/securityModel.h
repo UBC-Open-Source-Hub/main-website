@@ -1,11 +1,13 @@
 #pragma once
 class SecurityModel {
    public:
-      SecurityModel();
+      SecurityModel(int socket);
       ~SecurityModel();
 
       // Pure virtual methods
-      virtual void accept() = 0;
+      virtual int acceptConnections() = 0;
 
-   private:
+   protected:
+      int socket;
+      bool isActive;
 };

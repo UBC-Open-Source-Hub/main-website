@@ -1,5 +1,6 @@
 #include "inc/securityModel.h"
 
-SecurityModel::SecurityModel() {}
+SecurityModel::SecurityModel(int socket) : 
+   socket(socket), isActive(false) {}
 
 SecurityModel::~SecurityModel() {}

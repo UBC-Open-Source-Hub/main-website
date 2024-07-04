@@ -4,10 +4,10 @@
 
 class SecurityModelSimple : public SecurityModel {
    public:
-      SecurityModelSimple();
+      SecurityModelSimple(int socket);
       ~SecurityModelSimple();
 
-      void accept() override;
+      int acceptConnections() override;
 
    private:
 };
