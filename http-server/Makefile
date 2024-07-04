@@ -15,9 +15,10 @@ setup:
 	mkdir -p $(BIN_DIR)
 
 $(BIN): $(SRCS:%.cpp=$(BIN_DIR)/%.o)
-	$(CL) -o $(BIN) $<
+	$(CL) -o $(BIN) $^
 
 $(BIN_DIR)/%.o: %.cpp
+	@echo $<
 	${CL} ${CXXFLAGS} -include $(INC_DIR)/$(<:%.cpp=%.h) -c $< -o $@
 
 clean:

@@ -11,6 +11,7 @@
 #include <arpa/inet.h>
 
 #include "inc/server.h"
+#include "inc/securityModelSimple.h"
 
 #define eprintf(format, ...) \
    fprintf(stderr, format ": %s\n" __VA_OPT__(,) __VA_ARGS__, strerror(errno))
@@ -25,6 +26,8 @@ int main (int argc, char *argv[]) {
    struct addrinfo hints, *res ;
    int rc = 0; // Return code
    int socketFd = 0; // Socket file descriptor
+
+   SecurityModelSimple simpleModel;
    
    // Initialize the hints
    memset(&hints, 0, sizeof(hints));
@@ -70,6 +73,8 @@ int main (int argc, char *argv[]) {
       eprintf("Failed to start listening on port %s", TARGET_PORT);
       goto EXIT;
    } 
+
+   simpleModel.accept();
 
 EXIT:
    if (nullptr != res) {
