@@ -33,7 +33,7 @@ int main (int argc, char *argv[]) {
    rc = getaddrinfo(nullptr, TARGET_PORT, &hints, &res);
    if (rc) {
       eprintf("Failed to obtain the server's address info");
-      goto EXIT;
+      return rc;
    }
 
    // Go through the linked list and bind to the first "good" result
@@ -56,27 +56,22 @@ int main (int argc, char *argv[]) {
 
       break;
    }
+   freeaddrinfo(res);
    if (-1 == socketFd) {
       rc = -1;
       eprintf("Failed to find a good address to bind to");
-      goto EXIT;
+      return rc;
    }
 
    // Start listening
    rc = listen(socketFd, BACKLOG);
    if (-1 == socketFd) {
       eprintf("Failed to start listening on port %s", TARGET_PORT);
-      goto EXIT;
+      return -1;
    } 
 
-   {
-      SecurityModelSimple simpleModel(socketFd);
-      simpleModel.acceptConnections();
-   }
+   SecurityModelSimple simpleModel(socketFd);
+   simpleModel.acceptConnections();
 
-EXIT:
-   if (nullptr != res) {
-      freeaddrinfo(res);
-   }
    return rc;
 }
