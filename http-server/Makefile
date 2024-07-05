@@ -8,7 +8,6 @@ BARE_SRC := $(SRCS:%.cpp=%)
 INC_DIR	:= ./inc
 BIN_DIR 	:= ./builds
 BIN  		:= $(BIN_DIR)/server
-
 all: setup $(BIN)
 
 setup:
@@ -18,8 +17,14 @@ $(BIN): $(SRCS:%.cpp=$(BIN_DIR)/%.o)
 	$(CL) -o $(BIN) $^
 
 $(BIN_DIR)/%.o: %.cpp
-	@echo $<
-	${CL} ${CXXFLAGS} -include $(INC_DIR)/$(<:%.cpp=%.h) -c $< -o $@
+	@if [ -f "$(wildcard $(INC_DIR)/$*.h)" ]; \
+	then \
+		echo ${CL} ${CXXFLAGS} -include "$(INC_DIR)/$*.h" -c $< -o $@; \
+		${CL} ${CXXFLAGS} -include "$(INC_DIR)/$*.h" -c $< -o $@; \
+	else \
+		echo ${CL} ${CXXFLAGS} -c $< -o $@; \
+		${CL} ${CXXFLAGS} -c $< -o $@; \
+	fi;
 
 clean:
 	rm -rf $(BIN_DIR)
