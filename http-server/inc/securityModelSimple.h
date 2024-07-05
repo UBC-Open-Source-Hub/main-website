@@ -8,6 +8,7 @@ class SecurityModelSimple : public SecurityModel {
       ~SecurityModelSimple();
 
       int acceptConnections() override;
+      void processConnection(int fd) override;
 
    private:
 };
