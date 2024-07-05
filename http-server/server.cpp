@@ -45,6 +45,7 @@ int main (int argc, char *argv[]) {
       socketFd = socket(traveler->ai_family, traveler->ai_socktype, traveler->ai_protocol);
       if (-1 == socketFd) {
          eprintf("Failed to create a socket with %s", ipCStr);
+         rc = -1;
          continue;
       }
 
@@ -57,8 +58,7 @@ int main (int argc, char *argv[]) {
       break;
    }
    freeaddrinfo(res);
-   if (-1 == socketFd) {
-      rc = -1;
+   if (rc) {
       eprintf("Failed to find a good address to bind to");
       return rc;
    }
