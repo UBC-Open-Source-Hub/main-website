@@ -2,7 +2,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include "inc/log.h"
+#include "inc/utils.h"
 #include "inc/securityModel.h"
 #include "inc/securityModelSimple.h"
 
