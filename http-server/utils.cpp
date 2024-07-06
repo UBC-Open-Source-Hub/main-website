@@ -1,6 +1,10 @@
+#include <arpa/inet.h>
+#include <signal.h>
+
 #include "inc/utils.h"
 
-#include <arpa/inet.h>
+// Forward declaration (to hide internal helper functions)
+void setSignal(int action, int sig) ;
 
 // Get string presentation of a socket address
 std::string getIpAddrStr(struct sockaddr *addr) {
@@ -20,4 +24,20 @@ std::string getIpAddrStr(struct sockaddr *addr) {
    inet_ntop(addr->sa_family, addrIn, ip, sizeof(ip));
 
    return ip;
+}
+
+void blockSignal(int sig) {
+   setSignal(SIG_BLOCK, sig);
+}
+
+void unBlockSignal(int sig) {
+   setSignal(SIG_UNBLOCK, sig);
+}
+
+// Internals
+void setSignal(int action, int sig) {
+   sigset_t newSet;
+   sigemptyset(&newSet);
+   sigaddset(&newSet, sig);
+   sigprocmask(action, &newSet, nullptr);
 }

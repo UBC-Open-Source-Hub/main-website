@@ -1,4 +1,5 @@
 // Standard libraries
+#include <csignal>
 #include <cstring>
 #include <string>
 #include <cstdio>
@@ -18,7 +19,26 @@ const char *TARGET_PORT = "8080";
 // How many pending connections can be in a queue
 const int  BACKLOG = 10;
 
+static volatile sig_atomic_t isExiting = false;
+volatile SecurityModel *securityModel = nullptr;
+
+void signalHandler(int sigNum) {
+   // Avoid re-entrancy!!!
+   if (isExiting)
+      return;
+   isExiting = true;
+
+   printf("Stopping the server...\n");
+   if (securityModel == nullptr)
+      return;
+
+   securityModel->deactivate();
+}
+
 int main (int argc, char *argv[]) {
+   // Register signal handler for interrupt signal
+   signal(SIGINT, signalHandler);
+
    printf("Starting server....\n");
    struct addrinfo hints, *res ;
    int rc = 0; // Return code
@@ -70,8 +90,9 @@ int main (int argc, char *argv[]) {
       return -1;
    } 
 
-   SecurityModelSimple simpleModel(socketFd);
-   simpleModel.acceptConnections();
+   SecurityModelSimple simpleModel;
+   securityModel = &simpleModel;
+   simpleModel.acceptConnections(socketFd);
 
    return rc;
 }

@@ -4,11 +4,15 @@
 
 class SecurityModelSimple : public SecurityModel {
    public:
-      SecurityModelSimple(int socket);
-      ~SecurityModelSimple();
+      SecurityModelSimple(): SecurityModel() {};
+      ~SecurityModelSimple() {};
 
-      int acceptConnections() override;
+      int acceptConnections(int socket) override;
       void processConnection(int fd) override;
+      void deactivate() volatile override;
+   
+   protected:
+      void shutdownConnections() override;
 
    private:
 };
