@@ -59,12 +59,14 @@ int SecurityModelSimple::acceptConnections(int socket) {
          continue;
       }
 
-      std::unique_lock<std::mutex> lck(this->mutex);
-      std::thread newWorker(&SecurityModelSimple::processConnection, this, fd);
-      std::thread::id id = newWorker.get_id(); 
-      newWorker.detach();
-      this->workers[id] = std::make_pair(std::move(newWorker), fd);
-      lck.unlock();
+      // Release lock at the end of scope
+      {
+         std::unique_lock<std::mutex> lck(this->mutex);
+         std::thread newWorker(&SecurityModelSimple::processConnection, this, fd);
+         std::thread::id id = newWorker.get_id(); // WARNING: detach & get_id must occur before move
+         newWorker.detach();
+         this->workers[id] = std::make_pair(std::move(newWorker), fd);
+      }
    }
 
    close(this->socket);
@@ -87,10 +89,12 @@ void SecurityModelSimple::processConnection(int fd) {
       std::cout << "Thread " << id << " received: " << buffer << "\n";
    }
    
-   // Remove from list of workers after finishing
-   std::unique_lock<std::mutex> lck(this->mutex);
-   this->workers.erase(id);
-   lck.unlock();
+   // Remove itself from list of workers after finishing
+   // Release lock at the end fo scope
+   {
+      std::unique_lock<std::mutex> lck(this->mutex);
+      this->workers.erase(id);
+   }
 }
 
 void SecurityModelSimple::deactivate() volatile {
@@ -118,7 +122,7 @@ void SecurityModelSimple::shutdownConnections() {
       shutdown(fd, 0); // Stop recving
    }
 
-   // Make sure all the workers have shutdown
+   // Make sure all the workers have shutdown before exiting
    while (this->workers.size() != 0) {
       sleep(1);
    }

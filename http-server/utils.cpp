@@ -26,15 +26,17 @@ std::string getIpAddrStr(struct sockaddr *addr) {
    return ip;
 }
 
+// Utility function to block certain signal around critical code
 void blockSignal(int sig) {
    setSignal(SIG_BLOCK, sig);
 }
 
+// Utitlity function to unblock certain signal 
 void unBlockSignal(int sig) {
    setSignal(SIG_UNBLOCK, sig);
 }
 
-// Internals
+// Internal helper function blockSignal and unBlockSignal
 void setSignal(int action, int sig) {
    sigset_t newSet;
    sigemptyset(&newSet);

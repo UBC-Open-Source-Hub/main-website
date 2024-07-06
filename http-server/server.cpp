@@ -1,6 +1,7 @@
 // Standard libraries
 #include <csignal>
 #include <cstring>
+#include <mutex>
 #include <string>
 #include <cstdio>
 
@@ -20,13 +21,19 @@ const char *TARGET_PORT = "8080";
 const int  BACKLOG = 10;
 
 static volatile sig_atomic_t isExiting = false;
+std::mutex sigHandlerMutex;
 volatile SecurityModel *securityModel = nullptr;
 
 void signalHandler(int sigNum) {
-   // Avoid re-entrancy!!!
-   if (isExiting)
-      return;
-   isExiting = true;
+   // Ensure lock is released at the end of scope
+   {
+      std::unique_lock<std::mutex> lck(sigHandlerMutex);
+      // Avoid re-entrancy!!!
+      if (isExiting)
+         return;
+      isExiting = true;
+   }
+
 
    printf("Stopping the server...\n");
    if (securityModel == nullptr)

@@ -1,28 +1,25 @@
 #pragma once
 
-#include <mutex>
-#include <thread>
-#include <unordered_map>
-#include <vector>
+// Abstract class that any security model must implement
 class SecurityModel {
    public:
-      SecurityModel(): socket(0), pipeFds{0, 0}, isActive(false) {}
+      SecurityModel(): socket(0), isActive(false) {}
 
       ~SecurityModel() {}
 
       // Pure virtual methods
+      // Begin accepting new connections using given socket's file descriptor
       virtual int acceptConnections(int socket) = 0;
 
+      // Process the connection
       virtual void processConnection(int fd) = 0;
 
+      // Deactivate the model. This is usually called upon server's shutdown
       virtual void deactivate() volatile = 0;
 
    protected:
       virtual void shutdownConnections() = 0;
 
       int socket;
-      int pipeFds[2];
       bool isActive;
-      std::unordered_map<std::thread::id, std::pair<std::thread, int>> workers;
-      std::mutex mutex;
 };
