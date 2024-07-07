@@ -5,10 +5,10 @@
 #include <thread>
 
 // Simple security model that acts as an "echo" server
-class SecurityModelSimple : public SecurityModel {
+class ServerModelSimple : public ServerModel {
    public:
-      SecurityModelSimple(): SecurityModel(), pipeFds{0, 0}  {};
-      ~SecurityModelSimple() {};
+      ServerModelSimple(): ServerModel(), pipeFds{0, 0}  {};
+      ~ServerModelSimple() {};
 
       int acceptConnections(int socket) override;
       void processConnection(int fd) override;

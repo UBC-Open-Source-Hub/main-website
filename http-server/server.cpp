@@ -13,7 +13,7 @@
 #include <arpa/inet.h>
 
 #include "inc/utils.h"
-#include "inc/securityModelSimple.h"
+#include "inc/serverModelSimple.h"
 
 // The port the server will listen on
 const char *TARGET_PORT = "8080";
@@ -22,7 +22,7 @@ const int  BACKLOG = 10;
 
 static volatile sig_atomic_t isExiting = false;
 std::mutex sigHandlerMutex;
-volatile SecurityModel *securityModel = nullptr;
+volatile ServerModel *securityModel = nullptr;
 
 void signalHandler(int sigNum) {
    // Ensure lock is released at the end of scope
@@ -97,7 +97,7 @@ int main (int argc, char *argv[]) {
       return -1;
    } 
 
-   SecurityModelSimple simpleModel;
+   ServerModelSimple simpleModel;
    securityModel = &simpleModel;
    simpleModel.acceptConnections(socketFd);
 
