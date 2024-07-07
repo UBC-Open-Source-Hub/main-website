@@ -1,11 +1,11 @@
 #pragma once
 
 // Abstract class that any security model must implement
-class SecurityModel {
+class ServerModel {
    public:
-      SecurityModel(): socket(0), isActive(false) {}
+      ServerModel(): socket(0), isActive(false) {}
 
-      ~SecurityModel() {}
+      ~ServerModel() {}
 
       // Pure virtual methods
       // Begin accepting new connections using given socket's file descriptor

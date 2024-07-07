@@ -13,9 +13,9 @@
 #include <vector>
 
 #include "inc/utils.h"
-#include "inc/securityModelSimple.h"
+#include "inc/serverModelSimple.h"
 
-int SecurityModelSimple::acceptConnections(int socket) {
+int ServerModelSimple::acceptConnections(int socket) {
    printf("Begin accepting new connections\n");
 
    // Initialize communication
@@ -62,7 +62,7 @@ int SecurityModelSimple::acceptConnections(int socket) {
       // Release lock at the end of scope
       {
          std::unique_lock<std::mutex> lck(this->mutex);
-         std::thread newWorker(&SecurityModelSimple::processConnection, this, fd);
+         std::thread newWorker(&ServerModelSimple::processConnection, this, fd);
          std::thread::id id = newWorker.get_id(); // WARNING: detach & get_id must occur before move
          newWorker.detach();
          this->workers[id] = std::make_pair(std::move(newWorker), fd);
@@ -76,7 +76,7 @@ int SecurityModelSimple::acceptConnections(int socket) {
    return 0;
 }
 
-void SecurityModelSimple::processConnection(int fd) {
+void ServerModelSimple::processConnection(int fd) {
    std::thread::id id = std::this_thread::get_id();
    while (true) {
       char buffer[100] = {0};
@@ -97,7 +97,7 @@ void SecurityModelSimple::processConnection(int fd) {
    }
 }
 
-void SecurityModelSimple::deactivate() volatile {
+void ServerModelSimple::deactivate() volatile {
    printf("Deactivating the model\n");
    if (!this->isActive)
       return;
@@ -108,7 +108,7 @@ void SecurityModelSimple::deactivate() volatile {
    }
 }
 
-void SecurityModelSimple::shutdownConnections() {
+void ServerModelSimple::shutdownConnections() {
    std::vector<std::thread::id> keys;
    for (auto &entry: this->workers) {
       auto &[ id, workerAndFd ] = entry;
