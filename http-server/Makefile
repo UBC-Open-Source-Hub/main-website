@@ -10,6 +10,9 @@ BIN_DIR 	:= ./builds
 BIN  		:= $(BIN_DIR)/server
 all: setup $(BIN)
 
+simple: CXXFLAGS += -DSIMPLE_MODEL
+simple: all
+
 setup:
 	mkdir -p $(BIN_DIR)
 

@@ -97,9 +97,13 @@ int main (int argc, char *argv[]) {
       return -1;
    } 
 
-   SecurityModelSimple simpleModel;
-   securityModel = &simpleModel;
-   simpleModel.acceptConnections(socketFd);
+   #ifdef SIMPLE_MODEL
+      SecurityModelSimple simpleModel;
+      securityModel = &simpleModel;
+      simpleModel.acceptConnections(socketFd);
+   #else
+      printf("Using HTTP model\n");
+   #endif
 
    return rc;
 }
