@@ -13,6 +13,7 @@
 #include <arpa/inet.h>
 
 #include "inc/utils.h"
+#include "inc/serverModel.h"
 #include "inc/serverModelSimple.h"
 
 // The port the server will listen on
