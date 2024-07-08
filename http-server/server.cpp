@@ -23,7 +23,7 @@ const int  BACKLOG = 10;
 
 static volatile sig_atomic_t isExiting = false;
 std::mutex sigHandlerMutex;
-volatile ServerModel *securityModel = nullptr;
+volatile ServerModel *serverModel = nullptr;
 
 void signalHandler(int sigNum) {
    // Ensure lock is released at the end of scope
@@ -37,10 +37,10 @@ void signalHandler(int sigNum) {
 
 
    printf("Stopping the server...\n");
-   if (securityModel == nullptr)
+   if (serverModel == nullptr)
       return;
 
-   securityModel->deactivate();
+   serverModel->deactivate();
 }
 
 int main (int argc, char *argv[]) {
@@ -99,7 +99,7 @@ int main (int argc, char *argv[]) {
    } 
 
    ServerModelSimple simpleModel;
-   securityModel = &simpleModel;
+   serverModel = &simpleModel;
    simpleModel.acceptConnections(socketFd);
 
    return rc;
