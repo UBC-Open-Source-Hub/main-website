@@ -5,7 +5,7 @@ class ServerModel {
    public:
       ServerModel(): socket(0), isActive(false) {}
 
-      ~ServerModel() {}
+      virtual ~ServerModel() {};
 
       // Pure virtual methods
       // Begin accepting new connections using given socket's file descriptor
