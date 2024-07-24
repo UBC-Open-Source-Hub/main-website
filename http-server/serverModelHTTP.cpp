@@ -1,5 +1,8 @@
 #include "inc/serverModelHTTP.h"
 #include "inc/serverModel.h"
+#include "inc/utils.h"
+
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
@@ -17,7 +20,7 @@ ServerModelHTTP::ServerModelHTTP() : ServerModel() {
 
 ServerModelHTTP::~ServerModelHTTP() {
    for (auto &pWorker: this->workers) {
-      // delete pWorker;
+      delete pWorker;
    }
 }
 
@@ -26,41 +29,47 @@ int ServerModelHTTP::acceptConnections(int socket) {
    // use a condition_variable to wake up one of the worker
    // let they work and process the connections
    // and the end of each connection, go back to sleep (aka waiting for the condition variable)
-   while (true) {
-      // struct sockaddr_storage clientAddr;
-      // socklen_t addrSize = sizeof(clientAddr);
-      //
-      // fd_set targetFds;
-      // FD_ZERO(&targetFds);
-      // FD_SET(this->socket, &targetFds);
-      // FD_SET(this->pipeFds[0], &targetFds);
-      // int selRes = select(maxFd + 1, &targetFds, nullptr, nullptr, nullptr);
-      // if (-1 == selRes && errno != EINTR) {
-      //    eprintf("Failed to wait for either pipe or socket to be ready");
-      //    break;
-      // }
-      //
-      // if (FD_ISSET(this->pipeFds[0], &targetFds)) {
-      //    printf("Stop accepting new connections\n");
-      //    break;
-      // }
-      // 
-      // // Thread will block if there are no incoming connections
-      // int fd = accept(this->socket, (struct sockaddr *)&clientAddr, &addrSize);
-      // if (-1 == fd) {
-      //    if (errno != EWOULDBLOCK) {
-      //       eprintf("Failed to accept new connections");
-      //       return -1;
-      //    }
-      //    continue;
-      // }
+   this->socket = socket;
+   int maxFd = std::max(this->pipeFds[0], this->socket) ;
+
+   while (this->isActive) {
+      struct sockaddr_storage clientAddr;
+      socklen_t addrSize = sizeof(clientAddr);
+
+      fd_set targetFds;
+      FD_ZERO(&targetFds);
+      FD_SET(this->socket, &targetFds);
+      FD_SET(this->pipeFds[0], &targetFds);
+      int selRes = select(maxFd + 1, &targetFds, nullptr, nullptr, nullptr);
+      if (-1 == selRes && errno != EINTR) {
+         eprintf("Failed to wait for either pipe or socket to be ready");
+         continue;
+      }
+
+      if (FD_ISSET(this->pipeFds[0], &targetFds)) {
+         printf("Stop accepting new connections\n");
+         break;
+      }
+
+      // Thread will block if there are no incoming connections
+      int fd = accept(this->socket, (struct sockaddr *)&clientAddr, &addrSize);
+      if (-1 == fd) {
+         if (errno != EWOULDBLOCK) {
+            eprintf("Failed to accept new connections");
+         }
+         continue;
+      }
+
+      processConnection(fd);
    }
-   printf("Num threads: %d", std::thread::hardware_concurrency());
-   printf("Accepting new HTTP connections\n");
+
    return 0;
 }
 
 void ServerModelHTTP::processConnection(int fd) {
+   this->jobs.push(fd);
+   this->condVar.notify_all();
+   
 }
 
 void ServerModelHTTP::deactivate() volatile {

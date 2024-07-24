@@ -28,6 +28,8 @@ class ServerModelHTTP : public ServerModel {
       void shutdownConnections() override;
 
    private:
+      int pipeFds[2];
+
       std::mutex mu;
       std::condition_variable condVar;
       std::vector<std::thread*> workers;
