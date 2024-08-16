@@ -91,6 +91,9 @@ void ServerModelHTTP::shutdownConnections() {
 void ServerModelHTTP::startWorker() {
    std::cout << "Thread " << std::this_thread::get_id() << " entering....\n\n";
    while (this->isActive) {
+      char buffer[100] = {0};
+      int receivedLen = 0;
+
       this->sem.acquire(); 
       if (this->jobQueue.size() == 0) // could be woken up to stop the thread
          continue;
@@ -98,28 +101,14 @@ void ServerModelHTTP::startWorker() {
       int fd = this->jobQueue.getJob();
       if (-1 == fd) // someone got the job before us
          continue;
-      std::cout << "Thread " << std::this_thread::get_id() << ": Received " << fd << "\n\n";
+      std::cout << "Thread " << std::this_thread::get_id() << ": Connected " << fd << "\n\n";
+      receivedLen = recv(fd, buffer, sizeof(buffer), 0);
+      if (0 == receivedLen) {
+         printf("Remote connection has been closed\n");
+      }
+      std::cout << "Thread " << std::this_thread::get_id() << ": Received " << buffer << "\n\n";
    }
    std::cout << "Thread " << std::this_thread::get_id() << " exiting....\n\n";
-   // while (this->isActive) {
-   //    int fd = -1;
-   //    char buffer[100] = {0};
-   //    int receivedLen = 0;
-   //    {
-   //       std::unique_lock<std::shared_mutex> lock(this->mu);
-   //       this->condVar.wait(lock, [this]{ return !this->isActive || this->jobs.size() > 0; });
-   //       if (!this->isActive)
-   //          break;
-   //       fd = this->jobs.front();
-   //       this->jobs.pop();
-   //    }
-   //
-   //    receivedLen = recv(fd, buffer, sizeof(buffer), 0);
-   //    if (0 == receivedLen) {
-   //       printf("Remote connection has been closed\n");
-   //    }
-   //    std::cout << "Thread " << std::this_thread::get_id() << " received: " << buffer << "\n";
-   // }
 }
 
 void ThreadSafeJobQueue::pushJob(int fd) {
