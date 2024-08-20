@@ -43,6 +43,8 @@ class ServerModelHTTP : public ServerModel {
 
       void processConnection(int fd) override;
 
+      void processRequest() ;
+
       void deactivate() volatile override;
 
       void startWorker();

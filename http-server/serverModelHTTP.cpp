@@ -1,5 +1,7 @@
 #include "inc/serverModelHTTP.h"
+#include "inc/responseHTTP.h"
 #include "inc/serverModel.h"
+#include "inc/requestHTTP.h"
 #include "inc/utils.h"
 
 #include <algorithm>
@@ -9,9 +11,11 @@
 #include <semaphore>
 #include <shared_mutex>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <thread>
 #include <unistd.h>
 #include <iostream>
+#include <string>
 
 ServerModelHTTP::ServerModelHTTP() : ServerModel(), sem(0) {
    for (int i = 0; i < 1; i++) {
@@ -90,8 +94,18 @@ void ServerModelHTTP::shutdownConnections() {
 
 void ServerModelHTTP::startWorker() {
    std::cout << "Thread " << std::this_thread::get_id() << " entering....\n\n";
+
+   char buffer[HEADER_MAX_SIZE + 1] = {0};
+   std::string bufferStr            = "";
+
+   RequestHeaderHTTP *reqHeader = nullptr;
+   
+   std::string errMsg = "";
+   StatusCode statusCode = StatusCode::OK;
+
+
+
    while (this->isActive) {
-      char buffer[100] = {0};
       int receivedLen = 0;
 
       this->sem.acquire(); 
@@ -102,9 +116,50 @@ void ServerModelHTTP::startWorker() {
       if (-1 == fd) // someone got the job before us
          continue;
       std::cout << "Thread " << std::this_thread::get_id() << ": Connected " << fd << "\n\n";
-      receivedLen = recv(fd, buffer, sizeof(buffer), 0);
+
+      // Overwriting the buffer: use the receive length to determine where the string terminates.
+      // Must save the last byte for null-terminating character, hence the sizeof(buffer) - 1.
+      receivedLen = recv(fd, buffer, sizeof(buffer) - 1, 0);
+      buffer[receivedLen] = '\0';
       if (0 == receivedLen) {
          printf("Remote connection has been closed\n");
+      }
+
+      bufferStr = std::string(buffer);
+      reqHeader = RequestHTTP::parseHeader(bufferStr);
+      // Validate header
+      if (nullptr == reqHeader) {
+         statusCode = StatusCode::BAD_REQUEST;
+         errMsg = "Invalid header";
+         goto SEND_RESPONSE;
+      } else if (0 == reqHeader->size) {
+         statusCode = StatusCode::PAYLOAD_TOO_LARGE;
+         errMsg = "Request is too large";
+         goto SEND_RESPONSE;
+      } else if ("HTTP/1.1" != reqHeader->version) {
+         statusCode = StatusCode::HTTP_VERSION_NOT_SUPPORTED;
+         errMsg = "Unsupported HTTP version";
+         goto SEND_RESPONSE;
+      }
+
+      switch (reqHeader->method) {
+         case RequestMethod::GET:  // Required
+            break;
+         case RequestMethod::HEAD: // Required
+            break;
+         default:
+            statusCode = StatusCode::NOT_IMPLEMENTED;
+            errMsg = "Unsupported HTTP method";
+            break;
+      }
+
+   SEND_RESPONSE:
+      // send a response back to the server
+      // log the errMsg
+      if (200 <= static_cast<int>(statusCode) && static_cast<int>(statusCode) <= 299) {
+         std::cout << "Successfully processed request\n";
+      } else {
+         std::cout << errMsg << "\n";
       }
       std::cout << "Thread " << std::this_thread::get_id() << ": Received " << buffer << "\n\n";
    }
