@@ -26,6 +26,10 @@ std::string getIpAddrStr(struct sockaddr *addr) {
    return ip;
 }
 
+bool isHTTPVersionSupported(const std::string &version) {
+   return "HTTP/1.1" == version;
+}
+
 // Utility function to block certain signal around critical code
 void blockSignal(int sig) {
    setSignal(SIG_BLOCK, sig);

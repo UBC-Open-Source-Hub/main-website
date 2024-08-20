@@ -136,7 +136,7 @@ void ServerModelHTTP::startWorker() {
          statusCode = StatusCode::PAYLOAD_TOO_LARGE;
          errMsg = "Request is too large";
          goto SEND_RESPONSE;
-      } else if ("HTTP/1.1" != reqHeader->version) {
+      } else if (!isHTTPVersionSupported(reqHeader->version)) {
          statusCode = StatusCode::HTTP_VERSION_NOT_SUPPORTED;
          errMsg = "Unsupported HTTP version";
          goto SEND_RESPONSE;
@@ -144,6 +144,7 @@ void ServerModelHTTP::startWorker() {
 
       switch (reqHeader->method) {
          case RequestMethod::GET:  // Required
+            std::cout << "recieved GET method\n";
             break;
          case RequestMethod::HEAD: // Required
             break;
