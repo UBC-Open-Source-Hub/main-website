@@ -6,6 +6,7 @@
 #define HEADER_MAX_SIZE 8192
 
 enum struct RequestMethod {
+   UNSUPPORTED = 0,
    GET,
    HEAD,
    POST,
@@ -38,6 +39,7 @@ class RequestHTTP {
       ~RequestHTTP();
 
    private:
+      static void parseStartLine(const std::string &startLine, RequestHeaderHTTP *req);
       RequestHeaderHTTP *header;
       std::string body;
 };

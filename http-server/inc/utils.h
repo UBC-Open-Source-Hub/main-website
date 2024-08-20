@@ -8,5 +8,7 @@
 
 std::string getIpAddrStr(struct sockaddr *addr);
 
+bool isHTTPVersionSupported(const std::string &version);
+
 void blockSignal(int sig);
 void unBlockSignal(int sig);
