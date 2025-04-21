@@ -98,12 +98,13 @@ void ServerModelHTTP::startWorker() {
    char buffer[HEADER_MAX_SIZE + 1] = {0};
    std::string bufferStr            = "";
 
+
+   RequestHTTP  req;
+   ResponseHTTP resp;
    RequestHeaderHTTP *reqHeader = nullptr;
    
    std::string errMsg = "";
    StatusCode statusCode = StatusCode::OK;
-
-
 
    while (this->isActive) {
       int receivedLen = 0;
@@ -126,7 +127,9 @@ void ServerModelHTTP::startWorker() {
       }
 
       bufferStr = std::string(buffer);
-      reqHeader = RequestHTTP::parseHeader(bufferStr);
+      req.parseHeader(bufferStr);
+      reqHeader = req.getHeader();
+
       // Validate header
       if (nullptr == reqHeader) {
          statusCode = StatusCode::BAD_REQUEST;
@@ -142,29 +145,78 @@ void ServerModelHTTP::startWorker() {
          goto SEND_RESPONSE;
       }
 
-      switch (reqHeader->method) {
-         case RequestMethod::GET:  // Required
-            std::cout << "recieved GET method\n";
-            break;
-         case RequestMethod::HEAD: // Required
-            break;
-         default:
-            statusCode = StatusCode::NOT_IMPLEMENTED;
-            errMsg = "Unsupported HTTP method";
-            break;
-      }
+      // Route the request to specified target
+      resp = route(req);
+      statusCode = resp.getStatusCode();
 
    SEND_RESPONSE:
       // send a response back to the server
       // log the errMsg
-      if (200 <= static_cast<int>(statusCode) && static_cast<int>(statusCode) <= 299) {
-         std::cout << "Successfully processed request\n";
-      } else {
-         std::cout << errMsg << "\n";
-      }
-      std::cout << "Thread " << std::this_thread::get_id() << ": Received " << buffer << "\n\n";
+      std::string respStr = resp.toStr();
+      send(fd, respStr.c_str(), respStr.length() + 1, 0);
+      std::cout << respStr << "\n";
+      std::cout << "Successfully processed request\n";
+      shutdown(fd, 0);
+      // if (200 <= static_cast<int>(statusCode) && static_cast<int>(statusCode) <= 299) {
+      //    std::string respStr = resp.toStr();
+      //    send(fd, respStr.c_str(), respStr.length() + 1, 0);
+      //    std::cout << "Successfully processed request\n";
+      // } else {
+      //    std::cout << errMsg << "\n";
+      // }
+      // std::cout << "Thread " << std::this_thread::get_id() << ": Received " << buffer << "\n\n";
    }
    std::cout << "Thread " << std::this_thread::get_id() << " exiting....\n\n";
+}
+
+// Will overwrite previous handler if the target has already specified
+void ServerModelHTTP::addRoute(std::string target, RequestMethod method, routeHandler handler) {
+   switch (method) {
+      case RequestMethod::GET:
+         this->getRoutes[target] = handler;
+         break;
+      case RequestMethod::HEAD:
+         break;
+      case RequestMethod::POST:
+         break;
+      case RequestMethod::PUT:
+         break;
+      default:
+         // should return error
+         break;
+   }
+}
+
+ResponseHTTP ServerModelHTTP::route(RequestHTTP &req) {
+   ResponseHTTP response;
+   RequestHeaderHTTP *header  = req.getHeader();
+   std::string errMsg         = "";
+   StatusCode statusCode      = StatusCode::OK;
+
+   std::cout << "METHOD: " << (int)header->method << "\n";
+   switch (header->method) {
+      case RequestMethod::GET:
+         std::cout << "TARGET: " << header->target << "\n";
+         if (this->getRoutes.find(header->target) == this->getRoutes.end()) {
+            errMsg = "Target is not found!";
+            statusCode = StatusCode::NOT_FOUND;
+            std::cout << "NOT FOUND!!!!\n";
+            break;
+         }
+         break;
+      case RequestMethod::HEAD:
+         break;
+      case RequestMethod::POST:
+         break;
+      case RequestMethod::PUT:
+         break;
+      default:
+         // should return error
+         break;
+   }
+
+   response.addStatusCode(statusCode);
+   return response;
 }
 
 void ThreadSafeJobQueue::pushJob(int fd) {

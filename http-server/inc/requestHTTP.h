@@ -28,18 +28,21 @@ struct RequestHeaderHTTP {
 
 class RequestHTTP {
    public:
+      RequestHTTP() {};
+      ~RequestHTTP();
+      
       // Return nullptr if:
       // - the header is not valid
       // Return RequestHeaderHTTP of size 0 if:
       // - no separation line (\r\n) are found. This could be due to incomplete header
-      static RequestHeaderHTTP* parseHeader(const std::string &content);
-
-      RequestHTTP() = delete;
-      RequestHTTP(const std::string &content, RequestHeaderHTTP *header = nullptr);
-      ~RequestHTTP();
+      void parseHeader(const std::string &content);
+ 
+      // Return the HTTP Header
+      RequestHeaderHTTP* getHeader();
 
    private:
-      static void parseStartLine(const std::string &startLine, RequestHeaderHTTP *req);
+      void parseStartLine(const std::string &startLine, RequestHeaderHTTP *req);
+
       RequestHeaderHTTP *header;
       std::string body;
 };

@@ -2,6 +2,7 @@
 #include <signal.h>
 
 #include "utils.hpp"
+#include "inc/responseHTTP.h"
 
 // Forward declaration (to hide internal helper functions)
 void setSignal(int action, int sig) ;
@@ -24,6 +25,17 @@ std::string getIpAddrStr(struct sockaddr *addr) {
    inet_ntop(addr->sa_family, addrIn, ip, sizeof(ip));
 
    return ip;
+}
+
+std::string getStatusCodeStr(StatusCode sc) {
+   switch (sc) {
+      case StatusCode::OK:
+         return "OK";
+      case StatusCode::NOT_FOUND:
+         return "NOT FOUND";
+      default:
+         return "";
+   }
 }
 
 bool isHTTPVersionSupported(const std::string &version) {

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "requestHTTP.h"
+#include "responseHTTP.h"
 #include "serverModel.h"
 #include <condition_variable>
 #include <mutex>
@@ -8,11 +10,14 @@
 #include <shared_mutex>
 #include <stdatomic.h>
 #include <thread>
+#include <unordered_map>
 #include <vector>
 
 // number of workers on standby
 #define NUM_WORKERS 5 // should be increased to a much larger number later
 #define MAX_NUM_WORKERS 20
+
+typedef StatusCode (*routeHandler)(ResponseHTTP &resp);
 
 // thread-safe job queue
 class ThreadSafeJobQueue {
@@ -49,8 +54,12 @@ class ServerModelHTTP : public ServerModel {
 
       void startWorker();
 
+      void addRoute(std::string target, RequestMethod method, routeHandler handler);
+
    protected:
       void shutdownConnections() override;
+
+      ResponseHTTP route(RequestHTTP &req);
 
    private:
       int pipeFds[2];
@@ -58,4 +67,7 @@ class ServerModelHTTP : public ServerModel {
       std::vector<std::thread*> workers;
       ThreadSafeJobQueue jobQueue;
       std::counting_semaphore<MAX_NUM_WORKERS> sem;
+
+      std::unordered_map<std::string, routeHandler> getRoutes;
+      // std::unordered_map<std::string, routeHandler> routes;
 };
