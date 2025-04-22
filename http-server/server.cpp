@@ -15,6 +15,7 @@
 #include "utils.hpp"
 #include "inc/serverModel.h"
 #include "inc/serverModelSimple.h"
+#include "inc/serverModelHTTP.h"
 
 // The port the server will listen on
 const char *TARGET_PORT = "8080";
@@ -98,9 +99,15 @@ int main (int argc, char *argv[]) {
       return -1;
    } 
 
-   ServerModelSimple simpleModel;
-   serverModel = &simpleModel;
-   simpleModel.acceptConnections(socketFd);
+   #ifdef SIMPLE_MODEL
+      ServerModelSimple simpleModel;
+      serverModel = &simpleModel;
+      simpleModel.acceptConnections(socketFd);
+   #else
+      ServerModelHTTP httpModel;
+      serverModel = &httpModel;
+      httpModel.acceptConnections(socketFd);
+   #endif
 
    return rc;
 }
