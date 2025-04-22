@@ -12,7 +12,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 
-#include "inc/utils.h"
+#include "utils.hpp"
 #include "inc/serverModel.h"
 #include "inc/serverModelSimple.h"
 
