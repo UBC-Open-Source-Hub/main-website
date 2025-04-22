@@ -1,7 +1,7 @@
 #include <arpa/inet.h>
 #include <signal.h>
 
-#include "inc/utils.h"
+#include "utils.hpp"
 
 // Forward declaration (to hide internal helper functions)
 void setSignal(int action, int sig) ;
