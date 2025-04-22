@@ -12,7 +12,7 @@
 #include <fcntl.h>
 #include <vector>
 
-#include "inc/utils.h"
+#include "utils.hpp"
 #include "inc/serverModelSimple.h"
 
 int ServerModelSimple::acceptConnections(int socket) {
